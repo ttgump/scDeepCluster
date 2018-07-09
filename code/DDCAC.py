@@ -1,3 +1,7 @@
+"""
+Implementation of Denoise Deep Count Autoencoder Clustering (DDCAC) for scRNA-seq data
+"""
+
 from time import time
 import numpy as np
 from keras.models import Model

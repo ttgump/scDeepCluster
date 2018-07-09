@@ -1,3 +1,7 @@
+"""
+Output the latent space of DDCAC
+"""
+
 from time import time
 import numpy as np
 from keras.models import Model
