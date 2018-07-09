@@ -3,9 +3,9 @@ import numpy as np
 from keras.models import Model
 import keras.backend as K
 from keras.engine.topology import Layer, InputSpec
-from keras.layers import Dense, Input, BatchNormalization, GaussianNoise, Layer, Activation, Dropout
+from keras.layers import Dense, Input, GaussianNoise, Layer, Activation
 from keras.models import Model
-from keras.optimizers import SGD, Adam, RMSprop
+from keras.optimizers import SGD, Adam
 from keras.utils.vis_utils import plot_model
 from keras.callbacks import EarlyStopping
 
@@ -20,9 +20,9 @@ from preprocess import read_dataset, normalize
 import tensorflow as tf
 
 from numpy.random import seed
-seed(2200)
+seed(2211)
 from tensorflow import set_random_seed
-set_random_seed(2200)
+set_random_seed(2211)
 
 MeanAct = lambda x: tf.clip_by_value(K.exp(x), 1e-5, 1e6)
 DispAct = lambda x: tf.clip_by_value(tf.nn.softplus(x), 1e-4, 1e4)
@@ -63,33 +63,19 @@ def autoencoder(dims, noise_sd=3, init='glorot_uniform', act='relu'):
     x = Input(shape=(dims[0],), name='counts')
     h = x
     h = GaussianNoise(noise_sd, name='input_noise')(h)
-#    h = Dropout(0.1)(h)
-#    h = BatchNormalization(center=True, scale=True)(h)
-#    h = Dropout(0.2)(h)
-#    h = GaussianNoise(noise_sd, name='input_noise')(h)
 
     # internal layers in encoder
     for i in range(n_stacks-1):
-#        h = Dense(dims[i + 1], activation=act, kernel_initializer=init, name='encoder_%d' % i)(h)
         h = Dense(dims[i + 1], kernel_initializer=init, name='encoder_%d' % i)(h)
         h = GaussianNoise(noise_sd, name='noise_%d' % i)(h)
-#        h = BatchNormalization(center=True, scale=True)(h)
         h = Activation(act)(h)
-#        h = Dropout(0.1)(h)
 
     # hidden layer
     h = Dense(dims[-1], kernel_initializer=init, name='encoder_hidden')(h)  # hidden layer, features are extracted from here
-#    h = BatchNormalization(center=True, scale=True)(h)
-#    h = Activation(act, name='encoder_hidden_act')(h)
-#    h = Dropout(0.1)(h)
 
     # internal layers in decoder
     for i in range(n_stacks-1, 0, -1):
         h = Dense(dims[i], activation=act, kernel_initializer=init, name='decoder_%d' % i)(h)
-#        h = Dense(dims[i], kernel_initializer=init, name='decoder_%d' % i)(h)
-#        h = BatchNormalization(center=True, scale=True)(h)
-#        h = Activation(act)(h)
-#        h = Dropout(0.2)(h)
 
     # output
 
@@ -191,7 +177,6 @@ class DDCAC(object):
 
         # prepare clean encode model
         ae_layers = [l for l in self.autoencoder.layers]
-#        print(ae_layers)
         hidden = self.autoencoder.input[0]
         for i in range(1, len(ae_layers)):
             if "noise" in ae_layers[i].name:
@@ -202,7 +187,6 @@ class DDCAC(object):
                 hidden = ae_layers[i](hidden)
             if "encoder_hidden" in ae_layers[i].name:  # only get encoder layers
                 break
-#        hidden = self.autoencoder.get_layer(name='encoder_hidden').output
         self.encoder = Model(inputs=self.autoencoder.input, outputs=hidden)
 
         pi = self.autoencoder.get_layer(name='pi').output
@@ -234,103 +218,8 @@ class DDCAC(object):
     def extract_feature(self, x):  # extract features from before clustering layer
         return self.encoder.predict(x)
 
-    def predict_clusters(self, x):  # predict cluster labels using the output of clustering layer
-        q, _ = self.model.predict(x, verbose=0)
-        return q.argmax(1)
 
-    @staticmethod
-    def target_distribution(q):  # target distribution P which enhances the discrimination of soft label Q
-        weight = q ** 2 / q.sum(0)
-        return (weight.T / weight.sum(1)).T
 
-    def fit(self, x_counts, sf, y, raw_counts, batch_size=256, maxiter=2e4, tol=1e-3, update_interval=140,
-            ae_weights=None, save_dir='./results/ddcac', loss_weights=[1,1], optimizer='adam'):
-        print('optimizer: ', optimizer)
-        self.model.compile(loss=['kld', self.loss], loss_weights=loss_weights, optimizer=optimizer)
-
-        print('Update interval', update_interval)
-        save_interval = int(x_counts.shape[0] / batch_size) * 5  # 5 epochs
-        print('Save interval', save_interval)
-
-        # Step 1: pretrain
-        if not self.pretrained and ae_weights is None:
-            print('...pretraining autoencoders using default hyper-parameters:')
-            print('   optimizer=\'adam\';   epochs=200')
-            self.pretrain(x, batch_size)
-            self.pretrained = True
-        elif ae_weights is not None:
-            self.autoencoder.load_weights(ae_weights)
-            print('ae_weights is loaded successfully.')
-
-        # Step 2: initialize cluster centers using k-means
-        print('Initializing cluster centers with k-means.')
-        kmeans = KMeans(n_clusters=self.n_clusters, n_init=20)
-        self.y_pred = kmeans.fit_predict(self.encoder.predict([x_counts, sf]))
-        y_pred_last = np.copy(self.y_pred)
-        self.model.get_layer(name='clustering').set_weights([kmeans.cluster_centers_])
-
-        # Step 3: deep clustering
-        # logging file
-        import csv, os
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        logfile = open(save_dir + '/ddcac_log.csv', 'w')
-        logwriter = csv.DictWriter(logfile, fieldnames=['iter', 'acc', 'nmi', 'ari', 'L', 'Lc', 'Lr'])
-        logwriter.writeheader()
-
-        loss = [0, 0, 0]
-        index = 0
-        for ite in range(int(maxiter)):
-            if ite % update_interval == 0:
-                q, _ = self.model.predict([x_counts, sf], verbose=0)
-                p = self.target_distribution(q)  # update the auxiliary target distribution p
-
-                # evaluate the clustering performance
-                self.y_pred = q.argmax(1)
-                if y is not None:
-                    acc = np.round(cluster_acc(y, self.y_pred), 5)
-                    nmi = np.round(metrics.normalized_mutual_info_score(y, self.y_pred), 5)
-                    ari = np.round(metrics.adjusted_rand_score(y, self.y_pred), 5)
-                    loss = np.round(loss, 5)
-                    logwriter.writerow(dict(iter=ite, acc=acc, nmi=nmi, ari=ari, L=loss[0], Lc=loss[1], Lr=loss[2]))
-                    print('Iter-%d: ACC= %.4f, NMI= %.4f, ARI= %.4f;  L= %.5f, Lc= %.5f,  Lr= %.5f'
-                          % (ite, acc, nmi, ari, loss[0], loss[1], loss[2]))
-
-                # check stop criterion
-                delta_label = np.sum(self.y_pred != y_pred_last).astype(np.float32) / self.y_pred.shape[0]
-                y_pred_last = np.copy(self.y_pred)
-                if ite > 0 and delta_label < tol:
-                    print('delta_label ', delta_label, '< tol ', tol)
-                    print('Reached tolerance threshold. Stopping training.')
-                    logfile.close()
-                    break
-
-            # train on batch
-            if (index + 1) * batch_size > x_counts.shape[0]:
-                loss = self.model.train_on_batch(x=[x_counts[index * batch_size::], sf[index * batch_size:]],
-                                                 y=[p[index * batch_size::], raw_counts[index * batch_size::]])
-                index = 0
-            else:
-                loss = self.model.train_on_batch(x=[x_counts[index * batch_size:(index + 1) * batch_size],
-                                                    sf[index * batch_size:(index + 1) * batch_size]],
-                                                 y=[p[index * batch_size:(index + 1) * batch_size],
-                                                    raw_counts[index * batch_size:(index + 1) * batch_size]])
-                index += 1
-
-            # save intermediate model
-            if ite % save_interval == 0:
-                # save DDCAC model checkpoints
-                print('saving model to: ' + save_dir + '/DDCAC_model_' + str(ite) + '.h5')
-                self.model.save_weights(save_dir + '/DDCAC_model_' + str(ite) + '.h5')
-
-            ite += 1
-
-        # save the trained model
-        logfile.close()
-        print('saving model to: ' + save_dir + '/DDCAC_model_final.h5')
-        self.model.save_weights(save_dir + '/DDCAC_model_final.h5')
-
-        return self.y_pred
 
 
 if __name__ == "__main__":
@@ -370,7 +259,6 @@ if __name__ == "__main__":
                      transpose=False,
                      test_split=False,
                      copy=True)
-#    sc.pp.filter_genes_dispersion(adata, n_top_genes=5000)
 
     adata = normalize(adata,
                       size_factors=True,
