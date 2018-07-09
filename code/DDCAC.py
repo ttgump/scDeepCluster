@@ -227,8 +227,8 @@ class DDCAC(object):
         return (weight.T / weight.sum(1)).T
 
     def fit(self, x_counts, sf, y, raw_counts, batch_size=256, maxiter=2e4, tol=1e-3, update_interval=140,
-            ae_weights=None, save_dir='./results/ddcac', loss_weights=[1,1], optimizer='adam'):
-        print('optimizer: ', optimizer)
+            ae_weights=None, save_dir='./results/ddcac', loss_weights=[1,1], optimizer='adadelta'):
+
         self.model.compile(loss=['kld', self.loss], loss_weights=loss_weights, optimizer=optimizer)
 
         print('Update interval', update_interval)
