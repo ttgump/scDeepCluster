@@ -203,15 +203,6 @@ class DDCAC(object):
         self.centers = []
         self.y_pred = []
 
-    def pretrain(self, x, y, batch_size=256, epochs=200, optimizer='adam', ae_file='ae_weights.h5'):
-        print('...Pretraining autoencoder...')
-        self.autoencoder.compile(loss=self.loss, optimizer=optimizer)
-        es = EarlyStopping(monitor="loss", patience=50, verbose=1)
-        self.autoencoder.fit(x=x, y=y, batch_size=batch_size, epochs=epochs, callbacks=[es])
-        self.autoencoder.save_weights(ae_file)
-        print('Pretrained weights are saved to ./' + str(ae_file))
-        self.pretrained = True
-
     def load_weights(self, weights_path):  # load weights of DDCAC model
         self.model.load_weights(weights_path)
 
