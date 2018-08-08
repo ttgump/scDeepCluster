@@ -1,5 +1,5 @@
 # DDCAC
-Denoise Deep Count Autoencoder Clustering (DDCAC) for Single Cell RNA-seq data
+Denoising Deep Count Autoencoder Clustering (scDeepCluster) for Single Cell RNA-seq data
 
 Requirement:
 
