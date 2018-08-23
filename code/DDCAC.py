@@ -51,7 +51,7 @@ def cluster_acc(y_true, y_pred):
     return sum([w[i, j] for i, j in ind]) * 1.0 / y_pred.size
 
 
-def autoencoder(dims, noise_sd=3, init='glorot_uniform', act='relu'):
+def autoencoder(dims, noise_sd=0, init='glorot_uniform', act='relu'):
     """
     Fully connected auto-encoder model, symmetric.
     Arguments:
@@ -159,7 +159,7 @@ class DDCAC(object):
     def __init__(self,
                  dims,
                  n_clusters=10,
-                 noise_sd=3,
+                 noise_sd=0,
                  alpha=1.0,
                  ridge=0,
                  debug=False):
