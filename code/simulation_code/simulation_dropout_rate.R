@@ -1,4 +1,4 @@
-#### simulate scRNA-seq data with various dropout rates ####
+#### simulate scRNA-seq data with various dropout rates, dropout are set to  -0.5, 0, 0.5, 1####
 
 rm(list = ls())
 library(splatter)
@@ -14,7 +14,7 @@ for(i in 1:20) {
     group.prob <- rep(1, nGroups) / nGroups
     sim <- splatSimulate(group.prob=group.prob, nGenes=nGenes, batchCells=batchCells,
                          dropout.type="experiment", method=method,
-                         seed=100+i, dropout.shape=-1, dropout.mid=dropout)
+                         seed=100+i, dropout.shape=-1, dropout.mid=dropout, de.facScale=0.3)
     
     counts     <- as.data.frame(t(counts(sim)))
     truecounts <- as.data.frame(t(assays(sim)$TrueCounts))

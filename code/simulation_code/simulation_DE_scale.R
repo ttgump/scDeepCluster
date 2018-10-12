@@ -1,4 +1,4 @@
-#### simulate scRNA-seq data with various differential expression intensities ####
+#### simulate scRNA-seq data with various differential expression intensities, de.scale are set to 0.2, 0.225, 0.25, 0.275 ####
 
 
 
@@ -8,7 +8,7 @@ library(rhdf5)
 
 dropout.rate <- c()
 for(i in 1:20) {
-  simulate <- function(nGroups=3, nGenes=2500, batchCells=1500, dropout=0)
+  simulate <- function(nGroups=3, nGenes=2500, batchCells=1500, dropout=0, de.scale=0.2)
   {
     if (nGroups > 1) method <- 'groups'
     else             method <- 'single'
@@ -17,7 +17,7 @@ for(i in 1:20) {
     sim <- splatSimulate(group.prob=group.prob, nGenes=nGenes, batchCells=batchCells,
                          dropout.type="experiment", method=method,
                          seed=100+i, dropout.shape=-1, dropout.mid=dropout,
-                         de.facScale=0.4) # change de.facScale to simulate different DE intensities
+                         de.facScale=de.scale) # change de.facScale to simulate different DE intensities
     
     counts     <- as.data.frame(t(counts(sim)))
     truecounts <- as.data.frame(t(assays(sim)$TrueCounts))
