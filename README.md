@@ -1,5 +1,5 @@
-# DDCAC
-Denoising Deep Count Autoencoder Clustering (scDeepCluster) for Single Cell RNA-seq data
+# scDeepCluster
+scDeepCluster, a novel model-based deep embedded clustering for Single Cell RNA-seq data
 
 Requirement:
 
