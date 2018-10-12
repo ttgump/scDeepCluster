@@ -15,7 +15,7 @@ Nvidia Tesla K80 (12G)
 
 Usage:
 
-python DDCAC.py --data_file data.h5 --n_clusters 10
+python scDeepCluster.py --data_file data.h5 --n_clusters 10
 
 set data_file to the destination to the data (stored in h5 format, with two components X and Y, where X is the cell by gene count matrix and Y is the true labels), n_clusters to the number of clusters.
 
