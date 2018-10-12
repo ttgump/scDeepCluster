@@ -1,5 +1,5 @@
 """
-Implementation of Denoise Deep Count Autoencoder Clustering (DDCAC) for scRNA-seq data
+Implementation of scDeepCluster for scRNA-seq data
 """
 
 from time import time
@@ -155,7 +155,7 @@ class ClusteringLayer(Layer):
 
 
 
-class DDCAC(object):
+class SCDeepCluster(object):
     def __init__(self,
                  dims,
                  n_clusters=10,
@@ -164,7 +164,7 @@ class DDCAC(object):
                  ridge=0,
                  debug=False):
 
-        super(DDCAC, self).__init__()
+        super(SCDeepCluster, self).__init__()
 
         self.dims = dims
         self.input_dim = dims[0]
@@ -215,7 +215,7 @@ class DDCAC(object):
         print('Pretrained weights are saved to ./' + str(ae_file))
         self.pretrained = True
 
-    def load_weights(self, weights_path):  # load weights of DDCAC model
+    def load_weights(self, weights_path):  # load weights of scDeepCluster model
         self.model.load_weights(weights_path)
 
     def extract_feature(self, x):  # extract features from before clustering layer
@@ -231,7 +231,7 @@ class DDCAC(object):
         return (weight.T / weight.sum(1)).T
 
     def fit(self, x_counts, sf, y, raw_counts, batch_size=256, maxiter=2e4, tol=1e-3, update_interval=140,
-            ae_weights=None, save_dir='./results/ddcac', loss_weights=[1,1], optimizer='adadelta'):
+            ae_weights=None, save_dir='./results/scDeepCluster', loss_weights=[1,1], optimizer='adadelta'):
 
         self.model.compile(loss=['kld', self.loss], loss_weights=loss_weights, optimizer=optimizer)
 
@@ -261,7 +261,7 @@ class DDCAC(object):
         import csv, os
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        logfile = open(save_dir + '/ddcac_log.csv', 'w')
+        logfile = open(save_dir + '/scDeepCluster_log.csv', 'w')
         logwriter = csv.DictWriter(logfile, fieldnames=['iter', 'acc', 'nmi', 'ari', 'L', 'Lc', 'Lr'])
         logwriter.writeheader()
 
@@ -306,16 +306,16 @@ class DDCAC(object):
 
             # save intermediate model
             if ite % save_interval == 0:
-                # save DDCAC model checkpoints
-                print('saving model to: ' + save_dir + '/DDCAC_model_' + str(ite) + '.h5')
-                self.model.save_weights(save_dir + '/DDCAC_model_' + str(ite) + '.h5')
+                # save scDeepCluster model checkpoints
+                print('saving model to: ' + save_dir + '/scDeepCluster_model_' + str(ite) + '.h5')
+                self.model.save_weights(save_dir + '/scDeepCluster_model_' + str(ite) + '.h5')
 
             ite += 1
 
         # save the trained model
         logfile.close()
-        print('saving model to: ' + save_dir + '/DDCAC_model_final.h5')
-        self.model.save_weights(save_dir + '/DDCAC_model_final.h5')
+        print('saving model to: ' + save_dir + '/scDeepCluster_model_final.h5')
+        self.model.save_weights(save_dir + '/scDeepCluster_model_final.h5')
         
         return self.y_pred
 
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     parser.add_argument('--update_interval', default=0, type=int)
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--ae_weights', default=None)
-    parser.add_argument('--save_dir', default='results/ddcac')
+    parser.add_argument('--save_dir', default='results/scDeepCluster')
     parser.add_argument('--ae_weight_file', default='ae_weights.h5')
 
     args = parser.parse_args()
@@ -378,29 +378,29 @@ if __name__ == "__main__":
     print(args)
 
 
-    # Define DDCAC model
-    ddcac = DDCAC(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
-    plot_model(ddcac.model, to_file='ddcac_model.png', show_shapes=True)
+    # Define scDeepCluster model
+    scDeepCluster = SCDeepCluster(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
+    plot_model(scDeepCluster.model, to_file='scDeepCluster_model.png', show_shapes=True)
     print("autocoder summary")
-    ddcac.autoencoder.summary()
+    scDeepCluster.autoencoder.summary()
     print("model summary")
-    ddcac.model.summary()
+    scDeepCluster.model.summary()
 
     t0 = time()
 
     # Pretrain autoencoders before clustering
     if args.ae_weights is None:
-        ddcac.pretrain(x=[adata.X, adata.obs.size_factors], y=adata.raw.X, batch_size=args.batch_size, epochs=args.pretrain_epochs, optimizer=optimizer1, ae_file=args.ae_weight_file)
+        scDeepCluster.pretrain(x=[adata.X, adata.obs.size_factors], y=adata.raw.X, batch_size=args.batch_size, epochs=args.pretrain_epochs, optimizer=optimizer1, ae_file=args.ae_weight_file)
 
     # begin clustering, time not include pretraining part.
 
-    ddcac.fit(x_counts=adata.X, sf=adata.obs.size_factors, y=y, raw_counts=adata.raw.X, batch_size=args.batch_size, tol=args.tol, maxiter=args.maxiter,
+    scDeepCluster.fit(x_counts=adata.X, sf=adata.obs.size_factors, y=y, raw_counts=adata.raw.X, batch_size=args.batch_size, tol=args.tol, maxiter=args.maxiter,
              update_interval=args.update_interval, ae_weights=args.ae_weights, save_dir=args.save_dir, loss_weights=[args.gamma, 1], optimizer=optimizer2)
 
     # Show the final results
-    y_pred = ddcac.y_pred
-    acc = np.round(cluster_acc(y, ddcac.y_pred), 5)
-    nmi = np.round(metrics.normalized_mutual_info_score(y, ddcac.y_pred), 5)
-    ari = np.round(metrics.adjusted_rand_score(y, ddcac.y_pred), 5)
+    y_pred = scDeepCluster.y_pred
+    acc = np.round(cluster_acc(y, scDeepCluster.y_pred), 5)
+    nmi = np.round(metrics.normalized_mutual_info_score(y, scDeepCluster.y_pred), 5)
+    ari = np.round(metrics.adjusted_rand_score(y, scDeepCluster.y_pred), 5)
     print('Final: ACC= %.4f, NMI= %.4f, ARI= %.4f' % (acc, nmi, ari))
     print('Clustering time: %d seconds.' % int(time() - t0))

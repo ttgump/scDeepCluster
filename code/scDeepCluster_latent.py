@@ -1,5 +1,5 @@
 """
-Output the latent space of DDCAC
+Output the latent space of scDeepCluster
 """
 
 from time import time
@@ -156,7 +156,7 @@ class ClusteringLayer(Layer):
 
 
 
-class DDCAC(object):
+class SCDeepCluster(object):
     def __init__(self,
                  dims,
                  n_clusters=10,
@@ -165,7 +165,7 @@ class DDCAC(object):
                  ridge=0,
                  debug=False):
 
-        super(DDCAC, self).__init__()
+        super(SCDeepCluster, self).__init__()
 
         self.dims = dims
         self.input_dim = dims[0]
@@ -207,7 +207,7 @@ class DDCAC(object):
         self.centers = []
         self.y_pred = []
 
-    def load_weights(self, weights_path):  # load weights of DDCAC model
+    def load_weights(self, weights_path):  # load weights of scDeepCluster model
         self.model.load_weights(weights_path)
 
     def extract_feature(self, x):  # extract features from before clustering layer
@@ -232,8 +232,8 @@ if __name__ == "__main__":
     parser.add_argument('--update_interval', default=0, type=int)
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--ae_weights', default=None)
-    parser.add_argument('--ddcac_weights', default=None)
-    parser.add_argument('--save_dir', default='results/ddcac')
+    parser.add_argument('--scDeepCluster_weights', default=None)
+    parser.add_argument('--save_dir', default='results/scDeepCluster')
     parser.add_argument('--ae_weight_file', default='ae_weights.h5')
     parser.add_argument('--latent_output', default='latent_output.csv')
 
@@ -275,19 +275,19 @@ if __name__ == "__main__":
     print(args)
 
 
-    # Define DDCAC model
-    ddcac = DDCAC(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
+    # Define scDeepCluster model
+    scDeepCluster = SCDeepCluster(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
     print("autocoder summary")
-    ddcac.autoencoder.summary()
+    scDeepCluster.autoencoder.summary()
     print("model summary")
-    ddcac.model.summary()
+    scDeepCluster.model.summary()
 
     t0 = time()
 
     # begin clustering, time not include pretraining part.
-    ddcac.model.load_weights(args.ddcac_weights)
-    hidden_layer = ddcac.model.get_layer(name='encoder_hidden').get_output_at(1)
-    hidden_output_model = Model(inputs = ddcac.model.input, outputs = hidden_layer)
+    scDeepCluster.model.load_weights(args.scDeepCluster_weights)
+    hidden_layer = scDeepCluster.model.get_layer(name='encoder_hidden').get_output_at(1)
+    hidden_output_model = Model(inputs = scDeepCluster.model.input, outputs = hidden_layer)
     hidden_output = hidden_output_model.predict([adata.X, adata.obs.size_factors])
     hidden_output = np.asarray(hidden_output)
     np.savetxt(args.latent_output, hidden_output, delimiter=",")
