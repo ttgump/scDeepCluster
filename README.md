@@ -1,5 +1,5 @@
 # scDeepCluster
-scDeepCluster, a novel model-based deep embedded clustering for Single Cell RNA-seq data
+scDeepCluster, a novel model-based deep embedded clustering for Single Cell RNA-seq data. See details in our paper: "Clustering single-cell RNA-seq data with a model-based deep learning approach".
 
 Requirement:
 
