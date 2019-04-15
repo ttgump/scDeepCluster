@@ -225,6 +225,7 @@ if __name__ == "__main__":
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=10, type=int)
     parser.add_argument('--batch_size', default=256, type=int)
+    parser.add_argument('--data_file', default='data.h5')
     parser.add_argument('--maxiter', default=2e4, type=int)
     parser.add_argument('--pretrain_epochs', default=400, type=int)
     parser.add_argument('--gamma', default=1, type=float,
@@ -243,7 +244,7 @@ if __name__ == "__main__":
     optimizer1 = Adam(amsgrad=True)
     optimizer2 = 'adadelta'
 
-    data_mat = h5py.File('data.h5')
+    data_mat = h5py.File(args.data_file)
     x = np.array(data_mat['X'])
     y = np.array(data_mat['Y'])
 
