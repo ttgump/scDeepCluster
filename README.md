@@ -13,6 +13,8 @@ Scanpy --- 1.0.4
 
 Nvidia Tesla K80 (12G)
 
+Please note that if using different versions, the results reported in our paper might not be able to repeat.
+
 Usage:
 
 python scDeepCluster.py --data_file data.h5 --n_clusters 10
