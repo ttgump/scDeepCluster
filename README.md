@@ -24,3 +24,5 @@ set data_file to the destination to the data (stored in h5 format, with two comp
 The final output reports the clustering performance, here is an example on 10X PBMC scRNA-seq data:
 
 Final: ACC= 0.8100, NMI= 0.7736, ARI= 0.7841
+
+I also implemented a pytorch version, see https://github.com/ttgump/scDCC/blob/master/scDeepCluster.py
