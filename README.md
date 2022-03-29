@@ -25,6 +25,6 @@ The final output reports the clustering performance, here is an example on 10X P
 
 Final: ACC= 0.8100, NMI= 0.7736, ARI= 0.7841
 
-**Recommend the pytorch version**, I some new features, see https://github.com/ttgump/scDeepCluster_pytorch
+**Recommend the pytorch version**, I add some new features, see https://github.com/ttgump/scDeepCluster_pytorch
 
 The raw data used in this paper can be found: https://figshare.com/articles/dataset/scDeepCluster_supporting_data/17158025
