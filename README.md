@@ -33,4 +33,4 @@ The raw data used in this paper can be found: https://figshare.com/articles/data
 
 **Online app**
 
-Online app website: https://app.superbio.ai
+Online app website: https://app.superbio.ai/apps/107?id=62712ec148139943a4273ae1
