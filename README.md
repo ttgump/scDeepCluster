@@ -3,7 +3,7 @@ scDeepCluster, a model-based deep embedding clustering for Single Cell RNA-seq d
 
 ![alt text](https://github.com/ttgump/scDeepCluster/blob/master/network.png?raw=True)
 
-Requirement:
+**Requirements:**
 
 Python --- 3.6.3
 
@@ -17,7 +17,7 @@ Nvidia Tesla K80 (12G)
 
 Please note that if using different versions, the results reported in our paper might not be able to repeat.
 
-Usage:
+**Usage:**
 
 ```sh
 python scDeepCluster.py --data_file data.h5 --n_clusters 10
@@ -29,7 +29,7 @@ The final output reports the clustering performance, here is an example on 10X P
 
 Final: ACC= 0.8100, NMI= 0.7736, ARI= 0.7841
 
-**Recommend the pytorch version**, I add some new features, see https://github.com/ttgump/scDeepCluster_pytorch
+**Recommend the pytorch version, I have added some new features:** see https://github.com/ttgump/scDeepCluster_pytorch
 
 The raw data used in this paper can be found: https://figshare.com/articles/dataset/scDeepCluster_supporting_data/17158025
 
