@@ -1,9 +1,20 @@
 # scDeepCluster
 scDeepCluster, a model-based deep embedding clustering for Single Cell RNA-seq data. See details in our paper: "Clustering single-cell RNA-seq data with a model-based deep learning approach" published in Nature Machine Intelligence https://www.nature.com/articles/s42256-019-0037-0.
 
+## Table of contents
+- [Network diagram](#diagram)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Pytorch version](#pytorch_version)
+- [Raw data](#data)
+- [Online app](#app)
+- [Contact](#contact)
+
+## <a name="diagram"></a>Network diagram
+
 ![alt text](https://github.com/ttgump/scDeepCluster/blob/master/network.png?raw=True)
 
-**Requirements:**
+## <a name="requirements"></a>Requirements
 
 Python --- 3.6.3
 
@@ -17,7 +28,7 @@ Nvidia Tesla K80 (12G)
 
 Please note that if using different versions, the results reported in our paper might not be able to repeat.
 
-**Usage:**
+## <a name="usage"></a>Usage
 
 ```sh
 python scDeepCluster.py --data_file data.h5 --n_clusters 10
@@ -29,10 +40,18 @@ The final output reports the clustering performance, here is an example on 10X P
 
 Final: ACC= 0.8100, NMI= 0.7736, ARI= 0.7841
 
+## <a name="pytorch_version"></a>Pytorch version
+
 **Recommend the pytorch version, I have added some new features:** see https://github.com/ttgump/scDeepCluster_pytorch
+
+## <a name="data"></a>Raw data
 
 The raw data used in this paper can be found: https://figshare.com/articles/dataset/scDeepCluster_supporting_data/17158025
 
-**Online app**
+## <a name="app"></a>Online app
 
 Online app website: https://app.superbio.ai/apps/107?id=62712ec148139943a4273ae1
+
+## <a name="contact"></a>Contact
+
+Tian Tian tt72@njit.edu
