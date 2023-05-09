@@ -154,7 +154,7 @@ class ClusteringLayer(Layer):
 
 
 
-class DCAC(object):
+class SCDeepCluster(object):
     def __init__(self,
                  dims,
                  n_clusters=10,
@@ -163,7 +163,7 @@ class DCAC(object):
                  ridge=0,
                  debug=False):
 
-        super(DCAC, self).__init__()
+        super(SCDeepCluster, self).__init__()
 
         self.dims = dims
         self.input_dim = dims[0]
@@ -216,7 +216,7 @@ class DCAC(object):
         print('Pretrained weights are saved to ./' + str(ae_file))
         self.pretrained = True
 
-    def load_weights(self, weights_path):  # load weights of DCAC model
+    def load_weights(self, weights_path):  # load weights of scDeepCluster model
         self.model.load_weights(weights_path)
 
     def extract_feature(self, x):  # extract features from before clustering layer
@@ -237,7 +237,7 @@ class DCAC(object):
         return (weight.T / weight.sum(1)).T
 
     def fit(self, x_counts, y, batch_size=256, maxiter=2e4, tol=1e-3, update_interval=140,
-            ae_weights=None, save_dir='./results/dcac', optimizer='adam'):
+            ae_weights=None, save_dir='./results/scDeepCluster', optimizer='adam'):
         print('optimizer: ', optimizer)
         self.model.compile(loss='kld', optimizer=optimizer)
 
@@ -267,7 +267,7 @@ class DCAC(object):
         import csv, os
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        logfile = open(save_dir + '/dcac_log.csv', 'w')
+        logfile = open(save_dir + '/scDeepCluster_log.csv', 'w')
         logwriter = csv.DictWriter(logfile, fieldnames=['iter', 'acc', 'nmi', 'ari', 'L'])
         logwriter.writeheader()
 
@@ -310,16 +310,16 @@ class DCAC(object):
 
             # save intermediate model
             if ite % save_interval == 0:
-                # save DCAC model checkpoints
-                print('saving model to: ' + save_dir + '/DCAC_model_' + str(ite) + '.h5')
-                self.model.save_weights(save_dir + '/DCAC_model_' + str(ite) + '.h5')
+                # save scDeepCluster model checkpoints
+                print('saving model to: ' + save_dir + '/scDeepCluster_model_' + str(ite) + '.h5')
+                self.model.save_weights(save_dir + '/scDeepCluster_model_' + str(ite) + '.h5')
 
             ite += 1
 
         # save the trained model
         logfile.close()
-        print('saving model to: ' + save_dir + '/DCAC_model_final.h5')
-        self.model.save_weights(save_dir + '/DCAC_model_final.h5')
+        print('saving model to: ' + save_dir + '/scDeepCluster_model_final.h5')
+        self.model.save_weights(save_dir + '/scDeepCluster_model_final.h5')
 
         return self.y_pred
 
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     parser.add_argument('--update_interval', default=0, type=int)
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--ae_weights', default=None)
-    parser.add_argument('--save_dir', default='results/dcac')
+    parser.add_argument('--save_dir', default='results/scDeepCluster')
     parser.add_argument('--ae_weight_file', default='ae_weights.h5')
     parser.add_argument('--data_file', default='data.h5')
 
@@ -379,13 +379,13 @@ if __name__ == "__main__":
     print(args)
 
 
-    # Define DCAC model
-    dcac = DCAC(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
-    plot_model(dcac.model, to_file='dcac_model.png', show_shapes=True)
+    # Define scDeepCluster model
+    scDeepCluster = SCDeepCluster(dims=[input_size, 256, 64, 32], n_clusters=args.n_clusters, noise_sd=2.5)
+    plot_model(scDeepCluster.model, to_file='scDeepCluster_model.png', show_shapes=True)
     print("autocoder summary")
-    dcac.autoencoder.summary()
+    scDeepCluster.autoencoder.summary()
     print("model summary")
-    dcac.model.summary()
+    scDeepCluster.model.summary()
 
     t0 = time()
     # split training and validating data
@@ -403,30 +403,30 @@ if __name__ == "__main__":
 
     # Pretrain autoencoders before clustering
     if args.ae_weights is None:
-        dcac.pretrain(x=[X_train, size_factors_train], y=raw_X_train, batch_size=args.batch_size, epochs=args.pretrain_epochs, optimizer=optimizer1, ae_file=args.ae_weight_file)
+        scDeepCluster.pretrain(x=[X_train, size_factors_train], y=raw_X_train, batch_size=args.batch_size, epochs=args.pretrain_epochs, optimizer=optimizer1, ae_file=args.ae_weight_file)
 
     # begin clustering, time not include pretraining part.
 
-    dcac.fit(x_counts=X_train, y=Y_train, batch_size=args.batch_size, tol=args.tol, maxiter=args.maxiter,
+    scDeepCluster.fit(x_counts=X_train, y=Y_train, batch_size=args.batch_size, tol=args.tol, maxiter=args.maxiter,
              update_interval=args.update_interval, ae_weights=args.ae_weights, save_dir=args.save_dir, optimizer=optimizer2)
 
     # Show the final results
-    y_pred = dcac.y_pred
-    acc = np.round(cluster_acc(y[training_idx], dcac.y_pred), 5)
-    nmi = np.round(metrics.normalized_mutual_info_score(y[training_idx], dcac.y_pred), 5)
-    ari = np.round(metrics.adjusted_rand_score(y[training_idx], dcac.y_pred), 5)
+    y_pred = scDeepCluster.y_pred
+    acc = np.round(cluster_acc(y[training_idx], scDeepCluster.y_pred), 5)
+    nmi = np.round(metrics.normalized_mutual_info_score(y[training_idx], scDeepCluster.y_pred), 5)
+    ari = np.round(metrics.adjusted_rand_score(y[training_idx], scDeepCluster.y_pred), 5)
     print('training data Final: ACC= %.4f, NMI= %.4f, ARI= %.4f' % (acc, nmi, ari))
     print('training data clustering time: %d seconds.' % int(time() - t0))
 
     # Caluate loss for training and validation data
-    train_loss = dcac.get_loss(x_counts=X_train)
-    validate_loss = dcac.get_loss(x_counts=X_validate)
+    train_loss = scDeepCluster.get_loss(x_counts=X_train)
+    validate_loss = scDeepCluster.get_loss(x_counts=X_validate)
 
     print('training cluster loss: %.4f, validating cluster loss: %.4f' % (train_loss, validate_loss))
     G = train_loss/validate_loss
     print('Generalizability: %.4f' % G)
 
-    y_validate_pred = dcac.predict_clusters(x=X_validate)
+    y_validate_pred = scDeepCluster.predict_clusters(x=X_validate)
     validate_acc = np.round(cluster_acc(y[validate_idx], y_validate_pred), 5)
     validate_nmi = np.round(metrics.normalized_mutual_info_score(y[validate_idx], y_validate_pred), 5)
     validate_ari = np.round(metrics.adjusted_rand_score(y[validate_idx], y_validate_pred), 5)
