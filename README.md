@@ -42,7 +42,9 @@ Final: ACC= 0.8100, NMI= 0.7736, ARI= 0.7841
 
 ## <a name="pytorch_version"></a>Pytorch version
 
-**Recommend the pytorch version, I have added some new features:** 1. automatically estimate number of clusters after pretraining; 2. clustering on datasets from different batches. See https://github.com/ttgump/scDeepCluster_pytorch
+**Recommend the pytorch version, I have added some new features:** 1. automatically estimating number of clusters after pretraining; 2. clustering on datasets from different batches. 
+
+See detail at https://github.com/ttgump/scDeepCluster_pytorch
 
 ## <a name="data"></a>Raw data
 
