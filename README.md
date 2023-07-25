@@ -52,7 +52,7 @@ The raw data used in this paper can be found: https://figshare.com/articles/data
 
 ## <a name="app"></a>Online app
 
-Online app website: https://app.superbio.ai/apps/107?id=62712ec148139943a4273ae1
+Online app website: https://app.superbio.ai/apps/107
 
 ## <a name="contact"></a>Contact
 
